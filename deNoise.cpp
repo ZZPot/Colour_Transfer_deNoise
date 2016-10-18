@@ -16,12 +16,13 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "deNoise.hpp"
+#include "deNoise.h"
 #include "opencv2/imgproc.hpp"
 #include <cmath>
 #include <limits>
 #include <array>
 #include "opencv2/highgui.hpp"
+#include <iostream>
 
 Mat solve(const Mat &IRR, const Mat &I0, const Mat &IR, \
           const int nbits, double smoothness, int level)
@@ -52,15 +53,6 @@ Mat solve(const Mat &IRR, const Mat &I0, const Mat &IR, \
     x[3] = Range(1, Ncol+1);
 
     // get greyscale gradient magnitude dI0 of I0
-    auto getGrad = [&](Mat const &in)->Mat{ 
-        Mat G0x, G0y, g;
-        cvtColor(in,g,CV_BGR2GRAY);
-        Sobel(g, G0x, -1, 1, 0 ,3);
-        Sobel(g, G0y, -1, 0, 1 ,3);
-        Mat G0 = G0x.mul(G0x) + G0y.mul(G0y);
-        sqrt(G0, G0);
-        return G0;
-    };
     Mat dI0 = getGrad(I0);
 
     Mat tmp[] = {dI0,dI0,dI0};
@@ -116,12 +108,12 @@ Mat solve(const Mat &IRR, const Mat &I0, const Mat &IR, \
         IRR_out = IRR0*(1-rho) + IRR_out*rho;
     }
 
-    /* DEBUG USE
-    cout<<nbits<<endl;
-    namedWindow( "Display window", WINDOW_AUTOSIZE );// Create a window for display.
+#ifdef  _DEBUG
+    std::cout << nbits << endl;
+    //namedWindow( "Display window", WINDOW_AUTOSIZE );// Create a window for display.
     imshow( "Display window", IRR_out );                   // Show our image inside it.
     waitKey(0);                                          // Wait for a keystroke in the window
-    */
+#endif
 
     return IRR_out;
 }
@@ -137,13 +129,13 @@ Mat deNoise_rec(const Mat &IRR, const Mat &I0, const Mat &IR, \
     int Ncol2 = 1 + (Ncol-1)/2;
 
     Mat IRR_out;
-    if (*(nbits+1) && Ncol2 > 20 && Nrow2>20)
+    if (nbits[1] && Ncol2 > 20 && Nrow2 > 20)
     {
         Mat I02, IR2, IRR2;
         resize(I0,I02,Size(Ncol2,Nrow2));
         resize(IR,IR2,Size(Ncol2,Nrow2));
         resize(IRR,IRR2,Size(Ncol2,Nrow2));
-        IRR2 = deNoise_rec(IRR2, I02, IR2, nbits+1, smoothness, level+1);
+        IRR2 = deNoise_rec(IRR2, I02, IR2, &nbits[1], smoothness, level+1);
         resize(IRR2,IRR_out,Size(Ncol,Nrow));
     }
     else
@@ -163,3 +155,15 @@ Mat deNoise(const Mat &I0, const Mat &IR, double smoothness)
     return deNoise_rec(I0_in, I0_in, IR_in, nbits, smoothness, 0);
 }
 
+Mat getGrad(Mat in)
+{
+	Mat G0x, G0y, g;
+    cvtColor(in ,g, CV_BGR2GRAY);
+    Sobel(g, G0x, -1, 1, 0, 3);
+    Sobel(g, G0y, -1, 0, 1, 3);
+	pow(G0x, 2, G0x);
+	pow(G0y, 2, G0y);
+	Mat G0;
+    sqrt(G0x + G0y, G0);
+    return G0;
+}

@@ -18,7 +18,7 @@
 
 #include "opencv2/core.hpp"
 #include "opencv2/highgui.hpp"
-#include "deNoise.hpp"
+#include "deNoise.h"
 #include <iostream>
 
 using namespace cv;

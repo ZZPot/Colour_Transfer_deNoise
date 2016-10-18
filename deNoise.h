@@ -25,4 +25,5 @@ Mat solve(const Mat &IRR, const Mat &I0, const Mat &IR, \
           const int nbits, double smoothness, int level);
 Mat deNoise_rec(const Mat &IRR, const Mat &I0, const Mat &IR, \
           const int *nbits, double smoothness, int level);
-Mat deNoise(const Mat &I0, const Mat &IR, double smoothness=1.);
+Mat deNoise(const Mat &I0, const Mat &IR, double smoothness = 1.);
+Mat getGrad(Mat in);
